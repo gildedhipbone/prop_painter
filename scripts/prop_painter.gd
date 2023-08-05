@@ -32,7 +32,7 @@ const RAY_LENGTH = 1000.0
 
 
 func _enter_tree():
-	add_custom_type("PropPainterSettings", "Resource", preload("res://addons/prop_painter/scripts/prop_painter_settings.gd"), null)
+	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
 
 	if (!ResourceLoader.exists(_pp_settings_path)):
 		var pp_settings = PropPainterSettings.new()
@@ -44,10 +44,10 @@ func _enter_tree():
 	_editor = get_editor_interface()
 	_preview = _editor.get_resource_previewer()
 
-	_prop_painter_dock = preload("res://addons/prop_painter/scenes/prop_painter.tscn").instantiate()
+	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
 
-	_brush_material = preload("res://addons/prop_painter/materials/brush_material.tres")
+	_brush_material = preload("../materials/brush_material.tres")
 
 
 func _ready():
