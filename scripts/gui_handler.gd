@@ -43,7 +43,7 @@ func _ready():
 
 	_import_dialog.title = "Import Asset Library"
 	_export_dialog.title = "Export Asset Library"
-	palette_item_list.palette_drop_data_added.connect(_palette_drop_data)
+	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
 
 	# _on_export_dialog_confirmed() doesn't emit when the user confirms with the Enter key.
 	# Hence this solution.
@@ -196,6 +196,6 @@ func _on_import_dialog_file_selected(path):
 	_fd_import_path = path
 	pass # Replace with function body.
 
-func _palette_drop_data(path : String, tab: String):
-	palette_drop_data_added.emit(path, tab)
+func _palette_drop_data(path : String):
+	palette_drop_data_added.emit(path, _current_tab)
 	pass

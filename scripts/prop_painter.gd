@@ -274,7 +274,7 @@ func _align_with_y(transf : Transform3D, normal : Vector3):
 
 func _update_selected_tab(tab : String):
 	#print("godddd")
-	_current_tab_title = tab
+	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
 	_palette.clear()
 	#print(_current_tab_title)
 	#print(_prop_painter_settings.libraries)
@@ -433,7 +433,9 @@ func _import_library(path : String):
 				_add_prop(asset_path, tab)
 			#var uid : ResourceUID = ResourceUID.text_to_id(str_value)
 			#uid = ResourceUID.text_to_id(str_value)
-			#_add_prop(uid)
+			#_add_prop(uid
+
+	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
 	pass
 
