@@ -1,0 +1,208 @@
+[gd_scene load_steps=4 format=3 uid="uid://wtibgyagin6v"]
+
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/gui_handler.gd" id="1_tcld2"]
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/parent_field.gd" id="2_jsfna"]
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/prop_palette.gd" id="3_y4ijw"]
+
+[node name="Prop Painter" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -259.0
+offset_top = -169.0
+offset_right = -259.0
+offset_bottom = -169.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_tcld2")
+
+[node name="VBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+
+[node name="Side Panel" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Prop Actions" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+size_flags_stretch_ratio = 0.08
+
+[node name="Current Parent" type="Label" parent="VBoxContainer/Side Panel/Prop Actions"]
+layout_mode = 2
+text = "Parent:"
+
+[node name="Parent" type="Button" parent="VBoxContainer/Side Panel/Prop Actions"]
+layout_mode = 2
+text = "...
+"
+script = ExtResource("2_jsfna")
+
+[node name="Rotation Label" type="Label" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+text = "Rotation"
+
+[node name="Rotation Settings" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="X" type="Label" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+text = "X"
+
+[node name="Rotation X" type="SpinBox" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.01
+suffix = "τ"
+
+[node name="Y" type="Label" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+text = "Y"
+
+[node name="Rotation Y" type="SpinBox" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 1.0
+suffix = "τ"
+
+[node name="Z" type="Label" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+text = "Z"
+
+[node name="Rotation Z" type="SpinBox" parent="VBoxContainer/Side Panel/Rotation Settings"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.01
+suffix = "τ"
+
+[node name="Transform Settings" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+size_flags_stretch_ratio = 0.08
+
+[node name="Base Scale Label" type="Label" parent="VBoxContainer/Side Panel/Transform Settings"]
+layout_mode = 2
+text = "Base scale"
+
+[node name="Base Scale" type="SpinBox" parent="VBoxContainer/Side Panel/Transform Settings"]
+layout_mode = 2
+min_value = -5.0
+max_value = 5.0
+step = 0.01
+value = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="Scale Label" type="Label" parent="VBoxContainer/Side Panel/Transform Settings"]
+layout_mode = 2
+text = " ±"
+
+[node name="Scale" type="SpinBox" parent="VBoxContainer/Side Panel/Transform Settings"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+allow_greater = true
+
+[node name="Brush Settings" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="Margin Label" type="Label" parent="VBoxContainer/Side Panel/Brush Settings"]
+layout_mode = 2
+text = "Margin"
+
+[node name="Margin" type="SpinBox" parent="VBoxContainer/Side Panel/Brush Settings"]
+layout_mode = 2
+step = 0.1
+value = 5.0
+allow_greater = true
+suffix = "u"
+
+[node name="Alignment Settings" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="Alignment Label" type="Label" parent="VBoxContainer/Side Panel/Alignment Settings"]
+layout_mode = 2
+text = "Align to surface"
+
+[node name="Alignment Toggle" type="CheckButton" parent="VBoxContainer/Side Panel/Alignment Settings"]
+layout_mode = 2
+
+[node name="Palette Panel" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Palette Top Bar" type="HBoxContainer" parent="VBoxContainer/Palette Panel"]
+layout_mode = 2
+
+[node name="Search" type="LineEdit" parent="VBoxContainer/Palette Panel/Palette Top Bar"]
+visible = false
+layout_mode = 2
+placeholder_text = "Search"
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/Palette Panel/Palette Top Bar"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer"]
+layout_mode = 2
+
+[node name="Add tab" type="LineEdit" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
+layout_mode = 2
+placeholder_text = "Add tab"
+expand_to_text_length = true
+
+[node name="TabBar" type="TabBar" parent="VBoxContainer/Palette Panel/Palette Top Bar"]
+custom_minimum_size = Vector2(29.125, 21.12)
+layout_mode = 2
+clip_tabs = false
+drag_to_rearrange_enabled = true
+select_with_rmb = true
+
+[node name="Props Palette" type="ItemList" parent="VBoxContainer/Palette Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+select_mode = 1
+allow_rmb_select = true
+max_columns = 0
+icon_mode = 0
+icon_scale = 1.5
+script = ExtResource("3_y4ijw")
+
+[node name="PopupMenu" type="PopupMenu" parent="."]
+
+[node name="LineEditPopup" type="PopupPanel" parent="."]
+size = Vector2i(120, 50)
+visible = true
+
+[node name="LineEdit" type="LineEdit" parent="LineEditPopup"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 116.0
+offset_bottom = 46.0
+placeholder_text = "New name"
+
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation X" to="." method="_on_rotation_x_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation Y" to="." method="_on_rotation_y_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation Z" to="." method="_on_rotation_z_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Transform Settings/Base Scale" to="." method="_on_base_scale_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Transform Settings/Scale" to="." method="_on_scale_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Brush Settings/Margin" to="." method="_on_margin_value_changed"]
+[connection signal="toggled" from="VBoxContainer/Side Panel/Alignment Settings/Alignment Toggle" to="." method="_on_alignment_toggle_toggled"]
+[connection signal="text_submitted" from="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer/Add tab" to="." method="_on_library_name_text_submitted"]
+[connection signal="active_tab_rearranged" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_active_tab_rearranged"]
+[connection signal="tab_changed" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_changed"]
+[connection signal="tab_rmb_clicked" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_rmb_clicked"]
+[connection signal="tab_selected" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_selected"]
+[connection signal="item_clicked" from="VBoxContainer/Palette Panel/Props Palette" to="." method="_on_props_palette_item_clicked"]
+[connection signal="index_pressed" from="PopupMenu" to="." method="_on_popup_menu_index_pressed"]
+[connection signal="popup_hide" from="LineEditPopup" to="." method="_on_line_edit_popup_popup_hide"]
+[connection signal="text_submitted" from="LineEditPopup/LineEdit" to="." method="_on_line_edit_text_submitted"]

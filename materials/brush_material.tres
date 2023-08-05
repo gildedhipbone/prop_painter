@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://c2l204wl6at6f"]
+
+[ext_resource type="Shader" uid="uid://dn5xbkf38q0qk" path="res://addons/prop_painter/shaders/brush_shader.tres" id="1_2k0fj"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_2k0fj")
