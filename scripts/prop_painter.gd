@@ -5,7 +5,6 @@ const ACTION_NONE = -1
 const ACTION_STROKE = 0
 const ACTION_ERASE = 1
 
-var _pp_settings_path : String = "res://pp_settings.tres"
 var _editor: EditorInterface
 var _preview: EditorResourcePreview
 var _scene_root : Node3D
@@ -34,12 +33,12 @@ const RAY_LENGTH = 1000.0
 func _enter_tree():
 	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
 
-	if (!ResourceLoader.exists(_pp_settings_path)):
+	if (!ResourceLoader.exists("res://addons/prop_painter/resources/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
-		ResourceSaver.save(pp_settings, _pp_settings_path)
+		ResourceSaver.save(pp_settings, "res://addons/prop_painter/resources/settings.tres")
 
-	_prop_painter_settings = load(_pp_settings_path) as PropPainterSettings
+	_prop_painter_settings = load("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
 
 	_editor = get_editor_interface()
 	_preview = _editor.get_resource_previewer()
@@ -57,7 +56,7 @@ func _ready():
 	_prop_painter_dock.set_scale_value(_prop_painter_settings.scale)
 	_prop_painter_dock.set_base_scale(_prop_painter_settings.base_scale)
 
-	_palette.drop_data_added.connect(_add_prop)
+	_prop_painter_dock.palette_drop_data_added.connect(_add_prop)
 	_prop_painter_dock.parent.drop_data_added.connect(_set_parent)
 	_prop_painter_dock.rotation_values_changed.connect(_set_rotation)
 	_prop_painter_dock.scale_mult_changed.connect(_set_scale)
@@ -70,6 +69,9 @@ func _ready():
 	_prop_painter_dock.tabbar_rename_tab.connect(_rename_tab)
 	_prop_painter_dock.tab_order_on_exit.connect(_tab_order)
 	_prop_painter_dock.add_tab.connect(_add_tab)
+	_prop_painter_dock.import_library.connect(_import_library)
+	_prop_painter_dock.export_confirmed.connect(_export_library)
+	_prop_painter_dock.import_confirmed.connect(_import_library)
 	self.scene_closed.connect(_scene_closed)
 	self.scene_changed.connect(_switched_scene)
 
@@ -80,6 +82,8 @@ func _ready():
 		for lib in _prop_painter_settings.libraries:
 			_tabbar.add_tab(lib)
 			_prop_painter_settings.tab_order.append(lib)
+
+	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
 
 	_update_master_uid_list()
 
@@ -175,7 +179,8 @@ func _paint(origin, end):
 func _stroke(position : Vector3, normal : Vector3):
 	_current_selection.clear()
 	var selected_in_palette = _palette.get_selected_items()
-	var current_lib = _tabbar.get_tab_title(_tabbar.current_tab)
+	#var current_lib = _tabbar.get_tab_title(_tabbar.current_tab)
+	var current_lib = _current_tab_title
 
 	for idx in selected_in_palette:
 		var uid = _prop_painter_settings.libraries[current_lib][idx]
@@ -267,11 +272,12 @@ func _align_with_y(transf : Transform3D, normal : Vector3):
 	return transf
 
 
-func _update_selected_tab():
-	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
-
+func _update_selected_tab(tab : String):
+	#print("godddd")
+	_current_tab_title = tab
 	_palette.clear()
-
+	#print(_current_tab_title)
+	#print(_prop_painter_settings.libraries)
 	if _prop_painter_settings.libraries[_current_tab_title].size() != 0:
 		for uid in _prop_painter_settings.libraries[_current_tab_title]:
 			var prop_path : String = ResourceUID.get_id_path(uid)
@@ -287,15 +293,13 @@ func _update_master_uid_list():
 			for uid in _prop_painter_settings.libraries[key]:
 				if !_prop_painter_settings.libraries["All"].has(uid):
 					_prop_painter_settings.libraries["All"].append(uid)
+	_update_selected_tab(_current_tab_title)
 
-	_update_selected_tab()
 
-
-func _add_prop(path : String):
+func _add_prop(path : String, tab: String):
 	var prop_uid = ResourceLoader.get_resource_uid(path)
-
-	if !_prop_painter_settings.libraries[_current_tab_title].has(prop_uid):
-		_prop_painter_settings.libraries[_current_tab_title].append(prop_uid)
+	if !_prop_painter_settings.libraries[tab].has(prop_uid):
+		_prop_painter_settings.libraries[tab].append(prop_uid)
 
 	_update_master_uid_list()
 
@@ -320,7 +324,7 @@ func _add_tab(tab_title):
 		_prop_painter_settings.libraries[tab_title] = []
 		_tabbar.add_tab(tab_title)
 
-	_update_selected_tab()
+	_update_selected_tab(_current_tab_title)
 
 
 func _remove_tab(tab_idx):
@@ -409,4 +413,41 @@ func _scene_closed(filepath : String):
 	for scene in _scene_info:
 		if str(scene) == "<Freed Object>":
 			_scene_info.erase(scene)
+	pass
+
+func _import_library(path : String):
+	var load_file = FileAccess.open(path, FileAccess.READ)
+	var json = JSON.new()
+	json.parse((load_file.get_as_text()))
+	var data = json.get_data()
+	load_file.close()
+
+	# for key in data, _add_tab
+	# for value in data[key]: for i in value: _add_prop
+	for tab in data:
+		_add_tab(tab)
+		for value in data[tab]:
+			var uid = ResourceUID.text_to_id(value)
+			if ResourceUID.has_id(uid):
+				var asset_path = ResourceUID.get_id_path(uid)
+				_add_prop(asset_path, tab)
+			#var uid : ResourceUID = ResourceUID.text_to_id(str_value)
+			#uid = ResourceUID.text_to_id(str_value)
+			#_add_prop(uid)
+
+	pass
+
+func _export_library(path : String):
+	var data_to_send = {}
+	for lib in _prop_painter_settings.libraries:
+		var uids = []
+		for uid in _prop_painter_settings.libraries[lib]:
+			var uid_string = ResourceUID.id_to_text(uid)
+			uids.append(uid_string)
+		data_to_send[lib] = uids
+
+	var json_string = JSON.stringify(data_to_send)
+	var save_file = FileAccess.open(path, FileAccess.WRITE)
+	save_file.store_string(json_string)
+	save_file.close()
 	pass

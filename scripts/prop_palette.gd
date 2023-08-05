@@ -3,7 +3,7 @@ extends ItemList
 
 var _prop_preview: Texture2D
 
-signal drop_data_added(path)
+signal palette_drop_data_added(path)
 
 
 func add_to_list(path: String, preview: Texture2D, thumbnail_preview: Texture2D, userdata):
@@ -22,7 +22,7 @@ func _can_drop_data(at_position, data):
 func _drop_data(at_position, data):
 	var file_paths = data["files"]
 	for p in file_paths:
-		drop_data_added.emit(p)
+		palette_drop_data_added.emit(p)
 
 
 func _on_deselect_pressed():

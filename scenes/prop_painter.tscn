@@ -154,6 +154,14 @@ layout_mode = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer"]
 layout_mode = 2
 
+[node name="Import" type="Button" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
+layout_mode = 2
+text = "Import"
+
+[node name="Export" type="Button" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
+layout_mode = 2
+text = "Export"
+
 [node name="Add tab" type="LineEdit" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
 layout_mode = 2
 placeholder_text = "Add tab"
@@ -190,6 +198,21 @@ offset_right = 116.0
 offset_bottom = 46.0
 placeholder_text = "New name"
 
+[node name="ImportDialog" type="FileDialog" parent="."]
+title = "Import Asset Library"
+initial_position = 4
+size = Vector2i(512, 557)
+ok_button_text = "Open"
+file_mode = 0
+filters = PackedStringArray("*.json ; JSON")
+
+[node name="ExportDialog" type="FileDialog" parent="."]
+title = "Export Asset Library"
+initial_position = 4
+size = Vector2i(512, 557)
+ok_button_text = "Export"
+filters = PackedStringArray("*.json ; JSON")
+
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation X" to="." method="_on_rotation_x_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation Y" to="." method="_on_rotation_y_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Rotation Settings/Rotation Z" to="." method="_on_rotation_z_value_changed"]
@@ -197,6 +220,8 @@ placeholder_text = "New name"
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Transform Settings/Scale" to="." method="_on_scale_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Brush Settings/Margin" to="." method="_on_margin_value_changed"]
 [connection signal="toggled" from="VBoxContainer/Side Panel/Alignment Settings/Alignment Toggle" to="." method="_on_alignment_toggle_toggled"]
+[connection signal="pressed" from="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer/Import" to="." method="_on_import_pressed"]
+[connection signal="pressed" from="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer/Export" to="." method="_on_export_pressed"]
 [connection signal="text_submitted" from="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer/Add tab" to="." method="_on_library_name_text_submitted"]
 [connection signal="active_tab_rearranged" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_active_tab_rearranged"]
 [connection signal="tab_changed" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_changed"]
@@ -206,3 +231,7 @@ placeholder_text = "New name"
 [connection signal="index_pressed" from="PopupMenu" to="." method="_on_popup_menu_index_pressed"]
 [connection signal="popup_hide" from="LineEditPopup" to="." method="_on_line_edit_popup_popup_hide"]
 [connection signal="text_submitted" from="LineEditPopup/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="confirmed" from="ImportDialog" to="." method="_on_import_dialog_confirmed"]
+[connection signal="file_selected" from="ImportDialog" to="." method="_on_import_dialog_file_selected"]
+[connection signal="confirmed" from="ExportDialog" to="." method="_on_export_dialog_confirmed"]
+[connection signal="file_selected" from="ExportDialog" to="." method="_on_export_dialog_file_selected"]
