@@ -8,3 +8,11 @@ Choose a parent node (must be or extend Node3D) and select the asset(s) that you
  gif
 You can change the base scale of an asset, as well as introduce random rotation and scale. You can also make the asset align to the surface normal.
  gif
+
+ ## Possible Future Features
+* Support more formats
+* Grid & snap support
+* Drag and drop on tabs
+* Move/copy props from one tab to another
+* Option to automatically populate tabs and props based on folder structure
+ 
