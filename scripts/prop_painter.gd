@@ -216,16 +216,19 @@ func _instantiate_prop(uid, position : Vector3, normal : Vector3):
 
 	var prop_instance
 
-	if prop_path.get_extension() == "tscn" or prop_path.get_extension() == "glb":
-		prop_instance = load(prop_path).instantiate() as Node3D
+	var _scene_formats = ["tscn", "glb", "fbx"]
+	var _res_formats = ["res"]
+
+	if _scene_formats.has(prop_path.get_extension()):
+		prop_instance = load(prop_path).instantiate()
 		_parent.add_child(prop_instance)
 		prop_instance.owner = _scene_root
 		prop_instance.position = position
 
-	else: # if .res, .tres, etc. Implement some checks.
-		prop_instance = load(prop_path)
+	elif _res_formats.has(prop_path.get_extension()):
+		var res = load(prop_path)
 		var mesh_instance := MeshInstance3D.new()
-		mesh_instance.mesh = prop_instance
+		mesh_instance.mesh = res
 		prop_instance = mesh_instance
 		_parent.add_child(prop_instance)
 		prop_instance.owner = _scene_root
@@ -273,15 +276,14 @@ func _align_with_y(transf : Transform3D, normal : Vector3):
 
 
 func _update_selected_tab(tab : String):
-	#print("godddd")
 	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
 	_palette.clear()
-	#print(_current_tab_title)
-	#print(_prop_painter_settings.libraries)
+
 	if _prop_painter_settings.libraries[_current_tab_title].size() != 0:
 		for uid in _prop_painter_settings.libraries[_current_tab_title]:
 			var prop_path : String = ResourceUID.get_id_path(uid)
 			_preview.queue_resource_preview(prop_path, _palette, "add_to_list", null)
+			#_preview.queue_edited_resource_preview(prop, _palette, "add_to_list", null)
 	notify_property_list_changed()
 
 
