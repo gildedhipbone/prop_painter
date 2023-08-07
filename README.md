@@ -10,6 +10,7 @@ You can change the base scale of an asset, as well as introduce random rotation 
  gif
 
  ## Possible Future Features
+* Undo/Redo
 * Drag and drop from the palette
 * Support more formats
 * Grid & snap support
