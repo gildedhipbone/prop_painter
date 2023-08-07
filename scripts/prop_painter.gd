@@ -14,7 +14,7 @@ var _brush : MeshInstance3D
 var _brush_material : ShaderMaterial
 var _align_to_surface_normal : bool = false
 var _mouse_position : Vector2
-var _current_action : int = -1
+var _current_action := ACTION_NONE
 var _current_selection : Array
 var _placed_props : Array
 var _last_placed_prop : Node
@@ -24,33 +24,33 @@ var _scene_info : Dictionary
 var _parent : Node3D
 
 @onready var _tabbar : TabBar = _prop_painter_dock.tabbar
-@onready var _palette : ItemList = _prop_painter_dock.find_child("Props Palette")
-@onready var _parent_field : Button = _prop_painter_dock.find_child("Parent")
+@onready var _palette : ItemList = _prop_painter_dock.palette_item_list
+@onready var _parent_field : Button = _prop_painter_dock.parent
 
 const RAY_LENGTH = 1000.0
 
 
 func _enter_tree():
 	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
-
+	# Create a settings resource file if one doesn't exist.
 	if (!ResourceLoader.exists("res://addons/prop_painter/resources/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
 		ResourceSaver.save(pp_settings, "res://addons/prop_painter/resources/settings.tres")
 
-	_prop_painter_settings = load("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
-
-	_editor = get_editor_interface()
-	_preview = _editor.get_resource_previewer()
+	_prop_painter_settings = preload("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
 
 	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
 
 	_brush_material = preload("../materials/brush_material.tres")
 
+	_editor = get_editor_interface()
+	_preview = _editor.get_resource_previewer()
+
 
 func _ready():
-	# Set UI transform properties.
+	# Load settings.
 	_prop_painter_dock.set_rotation_vector3(_prop_painter_settings.rotation)
 	_prop_painter_dock.set_margin_value(_prop_painter_settings.margin)
 	_prop_painter_dock.set_scale_value(_prop_painter_settings.scale)
@@ -84,16 +84,19 @@ func _ready():
 			_prop_painter_settings.tab_order.append(lib)
 
 	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
-
+	#await get_tree().create_timer(0.5)
 	_update_master_uid_list()
 
 
 func _exit_tree():
 	remove_custom_type("PropPainterSettings")
+
 	if _brush != null and _brush.get_parent() != null:
 		_scene_root.remove_child(_brush)
+
 	if _brush != null:
 		_brush.queue_free()
+
 	remove_control_from_bottom_panel(_prop_painter_dock)
 	_prop_painter_dock.queue_free()
 
@@ -106,11 +109,13 @@ func _handles(_object):
 func _forward_3d_gui_input(viewport_camera, event):
 	if _parent == null:
 		return EditorPlugin.AFTER_GUI_INPUT_PASS
+
 	if _palette.get_selected_items().size() == 0:
 		_brush.hide()
 		return EditorPlugin.AFTER_GUI_INPUT_PASS
+
 	_brush.show()
-	# Get the editor camera.
+	# Get the editor camera. Is there a better way?
 	if _current_camera != viewport_camera:
 		_current_camera = viewport_camera
 
@@ -118,6 +123,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 		if event.keycode == KEY_ESCAPE:
 			_brush.hide()
 			_palette.deselect_all()
+			return EditorPlugin.AFTER_GUI_INPUT_PASS
 
 	if event is InputEventMouseMotion:
 		_mouse_position = event.position
@@ -145,7 +151,7 @@ func _physics_process(delta):
 
 	_paint(origin, end)
 
-
+# Move to util.gd
 func _create_sphere(radius) -> MeshInstance3D:
 	var sphere_mesh = SphereMesh.new()
 	sphere_mesh.radial_segments = 64
@@ -178,12 +184,13 @@ func _paint(origin, end):
 
 func _stroke(position : Vector3, normal : Vector3):
 	_current_selection.clear()
+
 	var selected_in_palette = _palette.get_selected_items()
 	#var current_lib = _tabbar.get_tab_title(_tabbar.current_tab)
-	var current_lib = _current_tab_title
+	#var current_lib = _current_tab_title
 
 	for idx in selected_in_palette:
-		var uid = _prop_painter_settings.libraries[current_lib][idx]
+		var uid = _prop_painter_settings.libraries[_current_tab_title][idx]
 		_current_selection.append(uid)
 
 	var random_prop = randi_range(0, _current_selection.size()) - 1
@@ -196,17 +203,15 @@ func _erase(brush_pos : Vector3):
 	for a in _placed_props:
 		if (brush_pos.distance_to(a.position) < 1.0):
 			var child = _parent.find_child(a.name)
-			# Add option to allow erase to target all of parent's children.
+			# Add option to allow erase to target any of parent's children?
 			_parent.remove_child(child)
-			# How many can we keep in memory until we must queue_free?
+			# Regarding undo/redo: How many can we keep in memory until we must queue_free?
 			child.queue_free()
 			_placed_props.remove_at(idx)
 		idx += 1
-	pass
 
 
 func _instantiate_prop(uid, position : Vector3, normal : Vector3):
-
 	if _last_placed_prop != null:
 		if !_distance_ok(position):
 			return
@@ -216,16 +221,13 @@ func _instantiate_prop(uid, position : Vector3, normal : Vector3):
 
 	var prop_instance
 
-	var _scene_formats = ["tscn", "glb", "fbx"]
-	var _res_formats = ["res"]
-
-	if _scene_formats.has(prop_path.get_extension()):
+	if _prop_painter_settings.scene_formats.has(prop_path.get_extension()):
 		prop_instance = load(prop_path).instantiate()
 		_parent.add_child(prop_instance)
 		prop_instance.owner = _scene_root
 		prop_instance.position = position
 
-	elif _res_formats.has(prop_path.get_extension()):
+	elif _prop_painter_settings.res_formats.has(prop_path.get_extension()):
 		var res = load(prop_path)
 		var mesh_instance := MeshInstance3D.new()
 		mesh_instance.mesh = res
@@ -233,12 +235,12 @@ func _instantiate_prop(uid, position : Vector3, normal : Vector3):
 		_parent.add_child(prop_instance)
 		prop_instance.owner = _scene_root
 		prop_instance.global_transform.origin = position
-
+	# Gets pretty slow.
 	prop_instance.name = filename
 
-	prop_instance.rotate_x(randf_range(-1.0, 1.0) * _prop_painter_settings.rotation.x * TAU)
-	prop_instance.rotate_y(randf_range(-1.0, 1.0) * _prop_painter_settings.rotation.y * TAU)
-	prop_instance.rotate_z(randf_range(-1.0, 1.0) * _prop_painter_settings.rotation.z * TAU)
+	prop_instance.rotate_x(randf_range(-1.0, 1.0) * TAU * _prop_painter_settings.rotation.x)
+	prop_instance.rotate_y(randf_range(-1.0, 1.0) * TAU * _prop_painter_settings.rotation.y)
+	prop_instance.rotate_z(randf_range(-1.0, 1.0) * TAU * _prop_painter_settings.rotation.z)
 
 	var _rand_scale : float = 1.0 + ((_prop_painter_settings.scale) * randf_range(-1.0, 1.0))
 	prop_instance.scale *= _prop_painter_settings.base_scale * _rand_scale
@@ -246,20 +248,18 @@ func _instantiate_prop(uid, position : Vector3, normal : Vector3):
 	if _align_to_surface_normal:
 		prop_instance.transform = _align_with_y(prop_instance.transform, normal)
 
-
 	_placed_props.append(prop_instance)
 	_last_placed_prop = prop_instance
 
 
 func _distance_ok(position : Vector3) -> bool:
-	# Pretty bad.
+	# Pretty bad...
 	if position.distance_to(_last_placed_prop.position) > _prop_painter_settings.margin:
 		return true
 	return false
 
 
 func _align_with_y(transf : Transform3D, normal : Vector3):
-	#var result = Basis()
 	var scale = transf.basis.get_scale()
 
 	transf.basis.x = normal.cross(transf.basis.z)
@@ -280,10 +280,32 @@ func _update_selected_tab(tab : String):
 	_palette.clear()
 
 	if _prop_painter_settings.libraries[_current_tab_title].size() != 0:
+
 		for uid in _prop_painter_settings.libraries[_current_tab_title]:
+
 			var prop_path : String = ResourceUID.get_id_path(uid)
-			_preview.queue_resource_preview(prop_path, _palette, "add_to_list", null)
-			#_preview.queue_edited_resource_preview(prop, _palette, "add_to_list", null)
+			var preview : ImageTexture
+
+			if _prop_painter_settings.previews.has(uid):
+				preview = _prop_painter_settings.previews[uid]
+
+			else:
+				var _asset_to_preview
+
+				if _prop_painter_settings.scene_formats.has(prop_path.get_extension()):
+					_asset_to_preview = load(prop_path).instantiate()
+
+				elif _prop_painter_settings.res_formats.has(prop_path.get_extension()):
+					_asset_to_preview = load(prop_path)
+					var mesh_instance := MeshInstance3D.new()
+					mesh_instance.mesh = _asset_to_preview
+					_asset_to_preview = mesh_instance
+
+				preview = await _prop_painter_dock.get_preview_texture(_asset_to_preview, _prop_painter_settings.icon_size)
+				_prop_painter_settings.previews[uid] = preview
+
+			_palette.add_to_list(prop_path, preview)
+
 	notify_property_list_changed()
 
 
@@ -295,13 +317,24 @@ func _update_master_uid_list():
 			for uid in _prop_painter_settings.libraries[key]:
 				if !_prop_painter_settings.libraries["All"].has(uid):
 					_prop_painter_settings.libraries["All"].append(uid)
+	# Erase preview images that no longer have matching UIDs.
+	var erase_us = []
+
+	if _prop_painter_settings.previews.size() != 0:
+		for uid in _prop_painter_settings.previews:
+			if !_prop_painter_settings.libraries["All"].has(uid):
+				erase_us.append(uid)
+	for uid in erase_us:
+		_prop_painter_settings.previews.erase(uid)
+
 	_update_selected_tab(_current_tab_title)
 
 
-func _add_prop(path : String, tab: String):
-	var prop_uid = ResourceLoader.get_resource_uid(path)
-	if !_prop_painter_settings.libraries[tab].has(prop_uid):
-		_prop_painter_settings.libraries[tab].append(prop_uid)
+func _add_prop(file_paths : Array, tab: String):
+	for p in file_paths:
+		var uid = ResourceLoader.get_resource_uid(p)
+		if !_prop_painter_settings.libraries[tab].has(uid):
+			_prop_painter_settings.libraries[tab].append(uid)
 
 	_update_master_uid_list()
 
@@ -326,8 +359,6 @@ func _add_tab(tab_title):
 		_prop_painter_settings.libraries[tab_title] = []
 		_tabbar.add_tab(tab_title)
 
-	_update_selected_tab(_current_tab_title)
-
 
 func _remove_tab(tab_idx):
 	var tab_title = _tabbar.get_tab_title(tab_idx)
@@ -339,13 +370,16 @@ func _remove_tab(tab_idx):
 
 func _rename_tab(tab_idx, new_title):
 	if _prop_painter_settings.libraries.has(new_title):
-		printerr("Library requires a unique name.")
+		print("Library requires a unique name.")
 		return
-	var old_title = _tabbar.get_tab_title(tab_idx)
-	var value_copy = _prop_painter_settings.libraries.get(old_title)
+
+	var org_title = _tabbar.get_tab_title(tab_idx)
+	var value_copy = _prop_painter_settings.libraries.get(org_title)
+
 	_prop_painter_settings.libraries[new_title] = value_copy
-	_prop_painter_settings.libraries.erase(old_title)
+	_prop_painter_settings.libraries.erase(org_title)
 	_tabbar.set_tab_title(tab_idx, new_title)
+
 	_prop_painter_settings.tab_order.clear()
 
 	for i in _tabbar.tab_count:
@@ -358,12 +392,9 @@ func _rename_tab(tab_idx, new_title):
 
 	_tabbar.current_tab = tab_idx
 
-	_update_master_uid_list()
-
 
 func _tab_order(tab_order : Array):
 	_prop_painter_settings.tab_order = tab_order
-	pass
 
 func _set_rotation(rotation : Vector3):
 	_prop_painter_settings.rotation = rotation
@@ -406,41 +437,37 @@ func _switched_scene(new_scene : Node):
 		_scene_root = null
 		_parent = null
 		_parent_field.text = "..."
-	pass
 
 
 func _scene_closed(filepath : String):
-	# Not pretty. But for some reason is_instance_valid() returns true on closed scenes.
+	# Signal fires before the scene is closed, hence the timer.
 	await get_tree().create_timer(.1).timeout
+	# Not pretty. But for some reason is_instance_valid() returns true on closed scenes.
 	for scene in _scene_info:
 		if str(scene) == "<Freed Object>":
 			_scene_info.erase(scene)
-	pass
 
+# Move to util.gd
 func _import_library(path : String):
-	var load_file = FileAccess.open(path, FileAccess.READ)
+	var import_file = FileAccess.open(path, FileAccess.READ)
 	var json = JSON.new()
-	json.parse((load_file.get_as_text()))
+	json.parse((import_file.get_as_text()))
 	var data = json.get_data()
-	load_file.close()
+	import_file.close()
 
-	# for key in data, _add_tab
-	# for value in data[key]: for i in value: _add_prop
 	for tab in data:
 		_add_tab(tab)
+
 		for value in data[tab]:
 			var uid = ResourceUID.text_to_id(value)
+
 			if ResourceUID.has_id(uid):
 				var asset_path = ResourceUID.get_id_path(uid)
 				_add_prop(asset_path, tab)
-			#var uid : ResourceUID = ResourceUID.text_to_id(str_value)
-			#uid = ResourceUID.text_to_id(str_value)
-			#_add_prop(uid
 
 	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
-	pass
-
+# Move to util.gd
 func _export_library(path : String):
 	var data_to_send = {}
 	for lib in _prop_painter_settings.libraries:
@@ -451,7 +478,6 @@ func _export_library(path : String):
 		data_to_send[lib] = uids
 
 	var json_string = JSON.stringify(data_to_send)
-	var save_file = FileAccess.open(path, FileAccess.WRITE)
-	save_file.store_string(json_string)
-	save_file.close()
-	pass
+	var export_file = FileAccess.open(path, FileAccess.WRITE)
+	export_file.store_string(json_string)
+	export_file.close()

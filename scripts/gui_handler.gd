@@ -7,15 +7,15 @@ var _current_context : String
 var _fd_export_path : String
 var _fd_import_path : String
 
+@onready var palette_item_list = find_child("Props Palette") as ItemList
+@onready var tabbar = find_child("TabBar") as TabBar
+@onready var parent = find_child("Parent")
 @onready var _right_click_menu = $PopupMenu as PopupMenu
 @onready var _lineedit_popup = $LineEditPopup as PopupPanel
 @onready var _lineedit = _lineedit_popup.get_child(0) as LineEdit
-@onready var palette_item_list = find_child("Props Palette") as ItemList
-@onready var tabbar = find_child("TabBar") as TabBar
 @onready var _palette_context_menu := ["Remove"]
 @onready var _tabbar_context_menu := ["Remove", "Rename"]
 @onready var _tab_name_lineedit = find_child("Add tab") as LineEdit
-@onready var parent = find_child("Parent")
 @onready var _import_dialog = find_child("ImportDialog") as FileDialog
 @onready var _export_dialog = find_child("ExportDialog") as FileDialog
 
@@ -36,20 +36,15 @@ signal tab_order_on_exit(tab_order : Array)
 signal import_library()
 signal export_confirmed(path : String)
 signal import_confirmed(path : String)
-signal palette_drop_data_added(path: String, tab: String)
+signal palette_drop_data_added(file_paths : Array, tab: String)
 
 
 func _ready():
-
+	# Had issues with titles not updating in Editor.
 	_import_dialog.title = "Import Asset Library"
 	_export_dialog.title = "Export Asset Library"
-	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
 
-	# _on_export_dialog_confirmed() doesn't emit when the user confirms with the Enter key.
-	# Hence this solution.
-	#_export_dialog.get_line_edit().text_submitted.connect(_export_submitted)
-	#_import_dialog.get_line_edit().text_submitted.connect(_import_submitted)
-	pass
+	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
 
 
 func _exit_tree():
@@ -65,34 +60,31 @@ func set_rotation_vector3(rot : Vector3):
 	self.find_child("Rotation Z").value = rot.z
 	_rotation = rot
 
-
-func set_scale_value(value : float):
-	self.find_child("Scale").value = value
-
-func set_base_scale(value : float):
-	self.find_child("Base Scale").value = value
-
-func set_margin_value(value : float):
-	self.find_child("Margin").value = value
-
-
 func _on_rotation_x_value_changed(value):
 	_rotation.x = value
+
 	rotation_values_changed.emit(_rotation)
 func _on_rotation_y_value_changed(value):
 	_rotation.y = value
 	rotation_values_changed.emit(_rotation)
+
 func _on_rotation_z_value_changed(value):
 	_rotation.z = value
 	rotation_values_changed.emit(_rotation)
 
 
+func set_scale_value(value : float):
+	self.find_child("Scale").value = value
 func _on_scale_value_changed(value):
 	scale_mult_changed.emit(value)
 
+func set_base_scale(value : float):
+	self.find_child("Base Scale").value = value
 func _on_base_scale_value_changed(value):
 	base_scale_changed.emit(value)
 
+func set_margin_value(value : float):
+	self.find_child("Margin").value = value
 func _on_margin_value_changed(value):
 	margin_value_changed.emit(value)
 
@@ -102,14 +94,12 @@ func _on_alignment_toggle_toggled(button_pressed):
 
 
 func _on_library_name_text_submitted(tab_title : String):
-	# Check for duplicates!
 	_tab_name_lineedit.clear()
 	add_tab.emit(tab_title)
 
 
 func _on_tab_bar_tab_selected(idx):
 	_current_tab = tabbar.get_tab_title(idx)
-	#_previous_tab_idx = idx
 	tab_selected.emit(_current_tab)
 
 
@@ -172,30 +162,59 @@ func _on_line_edit_text_submitted(new_text):
 func _on_line_edit_popup_popup_hide():
 	_lineedit.clear()
 
-
+# Import library/JSON
 func _on_import_pressed():
 	_import_dialog.visible = true
-	pass # Replace with function body.
-
-
-func _on_export_pressed():
-	_export_dialog.visible = true
-	pass # Replace with function body.
-
-
-func _on_export_dialog_file_selected(path):
-	export_confirmed.emit(path)
-	_export_dialog.get_line_edit().clear()
-	_fd_export_path = path
-	pass # Replace with function body.
 
 
 func _on_import_dialog_file_selected(path):
 	import_confirmed.emit(path)
 	_import_dialog.get_line_edit().clear()
 	_fd_import_path = path
-	pass # Replace with function body.
 
-func _palette_drop_data(path : String):
-	palette_drop_data_added.emit(path, _current_tab)
-	pass
+# Export library/JSON
+func _on_export_pressed():
+	_export_dialog.visible = true
+
+func _on_export_dialog_file_selected(path):
+	export_confirmed.emit(path)
+	_export_dialog.get_line_edit().clear()
+	_fd_export_path = path
+
+# User drops files onto the palette
+func _palette_drop_data(file_paths : Array):
+	palette_drop_data_added.emit(file_paths, _current_tab)
+
+func get_preview_texture(child : Node3D, resolution: int) -> ImageTexture:
+	var child_aabb : AABB = _get_aabb(child)
+	var child_size : Vector3 = abs(child_aabb.size)
+	var max_dim = max(child_size.x, child_size.y, child_size.z)
+
+	var _viewport : SubViewport = get_node("SubViewport") as SubViewport
+	_viewport.size = Vector2i(resolution, resolution)
+
+	_viewport.add_child(child)
+	var _child = _viewport.get_child(1) #as Node3D
+	_child.rotate_y(TAU/8.0)
+
+	var camera : Camera3D = _viewport.get_child(0)
+	var cam_pos = camera.position
+	camera.size = max_dim
+	camera.position -= Vector3(0, abs(child_aabb.position.y) - max_dim/1.5, 0)
+
+	await RenderingServer.frame_post_draw
+	var img = camera.get_viewport().get_texture().get_image()
+	var tex = ImageTexture.create_from_image(img)
+
+	_viewport.remove_child(child)
+	camera.position = cam_pos
+
+	return tex
+
+# Move to util.gd
+func _get_aabb(visual_instance : Node3D) -> AABB:
+	# To-do: In case of multiple meshes, merge them and get the combined AABB.
+	var meshes = visual_instance.find_children("*", "MeshInstance3D", true, false)
+	var aabb : AABB = meshes[0].mesh.get_aabb()
+
+	return aabb

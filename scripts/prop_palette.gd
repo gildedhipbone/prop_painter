@@ -1,14 +1,12 @@
 @tool
 extends ItemList
 
-var _prop_preview: Texture2D
 
-signal p_drop_data_added(path)
+signal p_drop_data_added(file_paths : Array)
 
-
-func add_to_list(path: String, preview: Texture2D, thumbnail_preview: Texture2D, userdata):
+# Move to gui_handler
+func add_to_list(path: String, preview: Texture2D):
 	var item_len = get_item_count()
-	#add_item(path.get_file(), null, true)
 	add_item(path.get_file(), preview, true)
 	set_item_metadata(item_len, path)
 	notify_property_list_changed()
@@ -21,8 +19,7 @@ func _can_drop_data(at_position, data):
 
 func _drop_data(at_position, data):
 	var file_paths = data["files"]
-	for p in file_paths:
-		p_drop_data_added.emit(p)
+	p_drop_data_added.emit(file_paths)
 
 
 func _on_deselect_pressed():
