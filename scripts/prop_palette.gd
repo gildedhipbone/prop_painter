@@ -13,7 +13,7 @@ func add_to_list(path: String, preview: Texture2D):
 
 
 func _can_drop_data(at_position, data):
-	# need to implement checks.
+	# Implement checks.
 	return true
 
 

@@ -18,7 +18,6 @@ var _current_action := ACTION_NONE
 var _current_selection : Array
 var _placed_props : Array
 var _last_placed_prop : Node
-var _prop_painter_settings : PropPainterSettings
 var _current_tab_title : String
 var _scene_info : Dictionary
 var _parent : Node3D
@@ -26,6 +25,7 @@ var _parent : Node3D
 @onready var _tabbar : TabBar = _prop_painter_dock.tabbar
 @onready var _palette : ItemList = _prop_painter_dock.palette_item_list
 @onready var _parent_field : Button = _prop_painter_dock.parent
+@onready var _prop_painter_settings = load("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
 
 const RAY_LENGTH = 1000.0
 
@@ -37,8 +37,6 @@ func _enter_tree():
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
 		ResourceSaver.save(pp_settings, "res://addons/prop_painter/resources/settings.tres")
-
-	_prop_painter_settings = preload("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
 
 	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
@@ -84,8 +82,9 @@ func _ready():
 			_prop_painter_settings.tab_order.append(lib)
 
 	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
-	#await get_tree().create_timer(0.5)
+
 	_update_master_uid_list()
+	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
 
 func _exit_tree():
@@ -186,12 +185,10 @@ func _stroke(position : Vector3, normal : Vector3):
 	_current_selection.clear()
 
 	var selected_in_palette = _palette.get_selected_items()
-	#var current_lib = _tabbar.get_tab_title(_tabbar.current_tab)
-	#var current_lib = _current_tab_title
 
 	for idx in selected_in_palette:
 		var uid = _prop_painter_settings.libraries[_current_tab_title][idx]
-		_current_selection.append(uid)
+		_current_selection.append(uid[1])
 
 	var random_prop = randi_range(0, _current_selection.size()) - 1
 
@@ -258,7 +255,7 @@ func _distance_ok(position : Vector3) -> bool:
 		return true
 	return false
 
-
+# move to util.gd
 func _align_with_y(transf : Transform3D, normal : Vector3):
 	var scale = transf.basis.get_scale()
 
@@ -276,18 +273,22 @@ func _align_with_y(transf : Transform3D, normal : Vector3):
 
 
 func _update_selected_tab(tab : String):
-	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
 	_palette.clear()
+
+	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
+
+	var sorted_library = _sort_library(_prop_painter_settings.libraries[_current_tab_title])
+	_prop_painter_settings.libraries[_current_tab_title] = sorted_library
 
 	if _prop_painter_settings.libraries[_current_tab_title].size() != 0:
 
 		for uid in _prop_painter_settings.libraries[_current_tab_title]:
+			var prop_path : String = ResourceUID.get_id_path(uid[1])
 
-			var prop_path : String = ResourceUID.get_id_path(uid)
 			var preview : ImageTexture
 
-			if _prop_painter_settings.previews.has(uid):
-				preview = _prop_painter_settings.previews[uid]
+			if _prop_painter_settings.previews.has(uid[1]):
+				preview = _prop_painter_settings.previews[uid[1]]
 
 			else:
 				var _asset_to_preview
@@ -302,7 +303,7 @@ func _update_selected_tab(tab : String):
 					_asset_to_preview = mesh_instance
 
 				preview = await _prop_painter_dock.get_preview_texture(_asset_to_preview, _prop_painter_settings.icon_size)
-				_prop_painter_settings.previews[uid] = preview
+				_prop_painter_settings.previews[uid[1]] = preview
 
 			_palette.add_to_list(prop_path, preview)
 
@@ -311,32 +312,46 @@ func _update_selected_tab(tab : String):
 
 func _update_master_uid_list():
 	_prop_painter_settings.libraries["All"].clear()
+	var uids = []
 
 	for key in _prop_painter_settings.libraries:
+
 		if !key == "All" and !key.is_empty():
-			for uid in _prop_painter_settings.libraries[key]:
-				if !_prop_painter_settings.libraries["All"].has(uid):
-					_prop_painter_settings.libraries["All"].append(uid)
+
+			for asset in _prop_painter_settings.libraries[key]:
+
+				if !uids.has(asset[1]):
+					_prop_painter_settings.libraries["All"].append(asset)
+					uids.append(asset[1])
 	# Erase preview images that no longer have matching UIDs.
 	var erase_us = []
 
 	if _prop_painter_settings.previews.size() != 0:
 		for uid in _prop_painter_settings.previews:
-			if !_prop_painter_settings.libraries["All"].has(uid):
+			if !uids.has(uid):
 				erase_us.append(uid)
 	for uid in erase_us:
 		_prop_painter_settings.previews.erase(uid)
 
-	_update_selected_tab(_current_tab_title)
+	notify_property_list_changed()
 
 
-func _add_prop(file_paths : Array, tab: String):
-	for p in file_paths:
-		var uid = ResourceLoader.get_resource_uid(p)
-		if !_prop_painter_settings.libraries[tab].has(uid):
-			_prop_painter_settings.libraries[tab].append(uid)
+func _add_prop(file_paths : Array, tab: String, update_tab : bool = true):
+	var uids : Array = []
+
+	for asset in _prop_painter_settings.libraries[tab]:
+			uids.append(asset[1])
+
+	for path in file_paths:
+		var asset_name : String = path.get_basename().get_file()
+		var uid = ResourceLoader.get_resource_uid(path)
+
+		if !uids.has(uid):
+			_prop_painter_settings.libraries[tab].append([asset_name, uid])
 
 	_update_master_uid_list()
+	if update_tab:
+		_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
 
 func _remove_prop(marked_props):
@@ -352,6 +367,7 @@ func _remove_prop(marked_props):
 		idx_shift += 1
 
 	_update_master_uid_list()
+	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
 
 func _add_tab(tab_title):
@@ -366,6 +382,7 @@ func _remove_tab(tab_idx):
 	_tabbar.remove_tab(tab_idx)
 
 	_update_master_uid_list()
+	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
 
 
 func _rename_tab(tab_idx, new_title):
@@ -452,32 +469,63 @@ func _import_library(path : String):
 	var import_file = FileAccess.open(path, FileAccess.READ)
 	var json = JSON.new()
 	json.parse((import_file.get_as_text()))
-	var data = json.get_data()
+	var libraries = json.get_data() as Dictionary
 	import_file.close()
+	# Sloppy solution to ensure that the palette doesn't create duplicates.
+	var count : int = 1
+	var idx_last_tab : int = libraries.size()
 
-	for tab in data:
+	for tab in libraries:
 		_add_tab(tab)
 
-		for value in data[tab]:
-			var uid = ResourceUID.text_to_id(value)
+		var asset_paths = []
 
+		for uid_path in libraries[tab]:
+			var uid = ResourceUID.text_to_id(uid_path)
+			# Check if the uid is known to the cache
 			if ResourceUID.has_id(uid):
 				var asset_path = ResourceUID.get_id_path(uid)
-				_add_prop(asset_path, tab)
+				asset_paths.append(asset_path)
 
-	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
+		if !asset_paths.is_empty():
+			if count != idx_last_tab:
+				_add_prop(asset_paths, tab, false)
+			else:
+				_add_prop(asset_paths, tab, true)
+
+		count += 1
+
 
 # Move to util.gd
 func _export_library(path : String):
 	var data_to_send = {}
 	for lib in _prop_painter_settings.libraries:
-		var uids = []
-		for uid in _prop_painter_settings.libraries[lib]:
-			var uid_string = ResourceUID.id_to_text(uid)
-			uids.append(uid_string)
-		data_to_send[lib] = uids
+		if lib != "All":
+			var uids = []
+			for asset in _prop_painter_settings.libraries[lib]:
+				var uid_string = ResourceUID.id_to_text(asset[1])
+				uids.append(uid_string)
+			data_to_send[lib] = uids
 
 	var json_string = JSON.stringify(data_to_send)
 	var export_file = FileAccess.open(path, FileAccess.WRITE)
 	export_file.store_string(json_string)
 	export_file.close()
+
+func _custom_sort(a, b) -> bool:
+	if a[0].naturalnocasecmp_to(b[0]) <= 0:
+		return true
+	else:
+		return false
+
+func _sort_library(library : Array) -> Array:
+	# Create array [["name", uid]]
+	var names_uids = []
+
+	for uid in library:
+		var asset_name : String = ResourceUID.get_id_path(uid[1]).get_basename().get_file()
+		names_uids.append([asset_name, uid[1]])
+
+	names_uids.sort_custom(_custom_sort)
+
+	return names_uids

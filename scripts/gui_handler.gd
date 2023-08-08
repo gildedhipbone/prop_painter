@@ -16,6 +16,7 @@ var _fd_import_path : String
 @onready var _palette_context_menu := ["Remove"]
 @onready var _tabbar_context_menu := ["Remove", "Rename"]
 @onready var _tab_name_lineedit = find_child("Add tab") as LineEdit
+@onready var _options_mb = find_child("Options") as MenuButton
 @onready var _import_dialog = find_child("ImportDialog") as FileDialog
 @onready var _export_dialog = find_child("ExportDialog") as FileDialog
 
@@ -45,6 +46,7 @@ func _ready():
 	_export_dialog.title = "Export Asset Library"
 
 	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
+	_options_mb.get_popup().index_pressed.connect(_options_pressed)
 
 
 func _exit_tree():
@@ -162,19 +164,17 @@ func _on_line_edit_text_submitted(new_text):
 func _on_line_edit_popup_popup_hide():
 	_lineedit.clear()
 
-# Import library/JSON
-func _on_import_pressed():
-	_import_dialog.visible = true
+func _options_pressed(idx : int):
+	if idx == 0:
+		_import_dialog.visible = true
+	elif idx == 1:
+		_export_dialog.visible = true
 
-
+# Import/export libraries
 func _on_import_dialog_file_selected(path):
 	import_confirmed.emit(path)
 	_import_dialog.get_line_edit().clear()
 	_fd_import_path = path
-
-# Export library/JSON
-func _on_export_pressed():
-	_export_dialog.visible = true
 
 func _on_export_dialog_file_selected(path):
 	export_confirmed.emit(path)
@@ -195,12 +195,14 @@ func get_preview_texture(child : Node3D, resolution: int) -> ImageTexture:
 
 	_viewport.add_child(child)
 	var _child = _viewport.get_child(1) #as Node3D
+	# Rotate 45 degrees
 	_child.rotate_y(TAU/8.0)
 
 	var camera : Camera3D = _viewport.get_child(0)
 	var cam_pos = camera.position
 	camera.size = max_dim
-	camera.position -= Vector3(0, abs(child_aabb.position.y) - max_dim/1.5, 0)
+	# Looks okay for now. To-do: get the transformed AABB.
+	camera.position += Vector3(0, child_aabb.end.y * 0.5, 0)
 
 	await RenderingServer.frame_post_draw
 	var img = camera.get_viewport().get_texture().get_image()
