@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PropPainterSettings" load_steps=2 format=3 uid="uid://dwrheermpxegb"]
+
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/prop_painter_settings.gd" id="1_d1yig"]
+
+[resource]
+script = ExtResource("1_d1yig")
+libraries = {
+"All": []
+}
+previews = {}
+rotation = Vector3(0, 0, 0)
+scale = 0.0
+base_scale = 1.0
+brush_size = 2.0
+margin = 5.0
+tab_order = []
+scene_formats = ["tscn", "glb", "fbx", "dae", "blend"]
+res_formats = ["res", "tres"]
+icon_size = 128
