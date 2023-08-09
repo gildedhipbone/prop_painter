@@ -17,6 +17,7 @@ var _mouse_position : Vector2
 var _current_action := ACTION_NONE
 var _current_selection : Array
 var _placed_props : Array
+var _removed_props : Array
 var _last_placed_prop : Node
 var _current_tab_title : String
 var _scene_info : Dictionary
@@ -53,6 +54,7 @@ func _ready():
 	_prop_painter_dock.set_margin_value(_prop_painter_settings.margin)
 	_prop_painter_dock.set_scale_value(_prop_painter_settings.scale)
 	_prop_painter_dock.set_base_scale(_prop_painter_settings.base_scale)
+	_prop_painter_dock.set_icon_size(_prop_painter_settings.icon_size)
 
 	_prop_painter_dock.palette_drop_data_added.connect(_add_prop)
 	_prop_painter_dock.parent.drop_data_added.connect(_set_parent)
@@ -61,6 +63,7 @@ func _ready():
 	_prop_painter_dock.base_scale_changed.connect(_set_base_scale)
 	_prop_painter_dock.margin_value_changed.connect(_set_margin)
 	_prop_painter_dock.alignment_toggled.connect(_set_alignment)
+	_prop_painter_dock.icon_size_submitted.connect(_set_icon_size)
 	_prop_painter_dock.tab_selected.connect(_update_selected_tab)
 	_prop_painter_dock.palette_remove_selected.connect(_remove_prop)
 	_prop_painter_dock.tabbar_remove_tab.connect(_remove_tab)
@@ -84,7 +87,7 @@ func _ready():
 	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
 
 	_update_master_uid_list()
-	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
+	_update_selected_tab()
 
 
 func _exit_tree():
@@ -272,11 +275,10 @@ func _align_with_y(transf : Transform3D, normal : Vector3):
 	return transf
 
 
-func _update_selected_tab(tab : String):
+func _update_selected_tab():
 	_palette.clear()
 
 	_current_tab_title = _tabbar.get_tab_title(_tabbar.current_tab)
-
 	var sorted_library = _sort_library(_prop_painter_settings.libraries[_current_tab_title])
 	_prop_painter_settings.libraries[_current_tab_title] = sorted_library
 
@@ -284,7 +286,6 @@ func _update_selected_tab(tab : String):
 
 		for uid in _prop_painter_settings.libraries[_current_tab_title]:
 			var prop_path : String = ResourceUID.get_id_path(uid[1])
-
 			var preview : ImageTexture
 
 			if _prop_painter_settings.previews.has(uid[1]):
@@ -351,7 +352,7 @@ func _add_prop(file_paths : Array, tab: String, update_tab : bool = true):
 
 	_update_master_uid_list()
 	if update_tab:
-		_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
+		_update_selected_tab()
 
 
 func _remove_prop(marked_props):
@@ -367,7 +368,7 @@ func _remove_prop(marked_props):
 		idx_shift += 1
 
 	_update_master_uid_list()
-	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
+	_update_selected_tab()
 
 
 func _add_tab(tab_title):
@@ -382,7 +383,7 @@ func _remove_tab(tab_idx):
 	_tabbar.remove_tab(tab_idx)
 
 	_update_master_uid_list()
-	_update_selected_tab(_tabbar.get_tab_title(_tabbar.current_tab))
+	_update_selected_tab()
 
 
 func _rename_tab(tab_idx, new_title):
@@ -427,6 +428,14 @@ func _set_margin(value : float):
 
 func _set_alignment(toggled : bool):
 	_align_to_surface_normal = toggled
+
+func _set_icon_size(size : int):
+	if _prop_painter_settings.icon_size != size:
+		_prop_painter_settings.icon_size = size
+
+	_prop_painter_settings.previews.clear()
+	_update_selected_tab()
+
 
 func _add_library(library_title: String):
 	# Check for duplicates.

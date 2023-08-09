@@ -13,4 +13,4 @@ class_name PropPainterSettings
 @export var tab_order : Array
 @export var scene_formats = ["tscn", "glb", "fbx", "dae", "blend"]
 @export var res_formats = ["res", "tres"]
-@export var icon_size = 128
+@export var icon_size : int = 128

@@ -53,6 +53,9 @@ text = "...
 "
 script = ExtResource("2_jsfna")
 
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
 [node name="Rotation Label" type="Label" parent="VBoxContainer/Side Panel"]
 layout_mode = 2
 text = "Rotation"
@@ -144,6 +147,23 @@ text = "Align to surface"
 [node name="Alignment Toggle" type="CheckButton" parent="VBoxContainer/Side Panel/Alignment Settings"]
 layout_mode = 2
 
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="Icon Size Label" type="Label" parent="VBoxContainer/Side Panel/HBoxContainer"]
+layout_mode = 2
+text = "Icon size"
+
+[node name="icon_size_spinbox" type="SpinBox" parent="VBoxContainer/Side Panel/HBoxContainer"]
+layout_mode = 2
+min_value = 32.0
+max_value = 512.0
+value = 32.0
+suffix = "px"
+
 [node name="Palette Panel" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -171,10 +191,16 @@ popup/item_0/id = 0
 popup/item_1/text = "Export Library"
 popup/item_1/id = 1
 
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
+layout_mode = 2
+
 [node name="Add tab" type="LineEdit" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
 layout_mode = 2
 placeholder_text = "Add tab"
 expand_to_text_length = true
+
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer"]
+layout_mode = 2
 
 [node name="TabBar" type="TabBar" parent="VBoxContainer/Palette Panel/Palette Top Bar"]
 custom_minimum_size = Vector2(29.125, 21.12)

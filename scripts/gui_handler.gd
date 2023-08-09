@@ -12,6 +12,7 @@ var _fd_import_path : String
 @onready var parent = find_child("Parent")
 @onready var _right_click_menu = $PopupMenu as PopupMenu
 @onready var _lineedit_popup = $LineEditPopup as PopupPanel
+@onready var _icon_size_spinbox = find_child("icon_size_spinbox") as SpinBox
 @onready var _lineedit = _lineedit_popup.get_child(0) as LineEdit
 @onready var _palette_context_menu := ["Remove"]
 @onready var _tabbar_context_menu := ["Remove", "Rename"]
@@ -28,7 +29,7 @@ signal scale_mult_changed(value : float)
 signal base_scale_changed(value : float)
 signal margin_value_changed(value : float)
 signal alignment_toggled(value : bool)
-signal tab_selected(tab : String)
+signal tab_selected()
 signal palette_remove_selected(selected_items : Array)
 signal add_tab(library : String)
 signal tabbar_remove_tab(selected_tab : int)
@@ -38,7 +39,7 @@ signal import_library()
 signal export_confirmed(path : String)
 signal import_confirmed(path : String)
 signal palette_drop_data_added(file_paths : Array, tab: String)
-
+signal icon_size_submitted(size : int)
 
 func _ready():
 	# Had issues with titles not updating in Editor.
@@ -47,6 +48,7 @@ func _ready():
 
 	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
 	_options_mb.get_popup().index_pressed.connect(_options_pressed)
+	_icon_size_spinbox.get_line_edit().text_submitted.connect(_on_icon_size_submitted)
 
 
 func _exit_tree():
@@ -90,6 +92,16 @@ func set_margin_value(value : float):
 func _on_margin_value_changed(value):
 	margin_value_changed.emit(value)
 
+func set_icon_size(value: int):
+	_icon_size_spinbox.value = value
+func _on_icon_size_submitted(value : String):
+	var int_value = value.to_int()
+	if !int_value > 0:
+		printerr("Icon size must be a positive integer.")
+		return
+
+	icon_size_submitted.emit(int_value)
+
 
 func _on_alignment_toggle_toggled(button_pressed):
 	alignment_toggled.emit(button_pressed)
@@ -102,7 +114,7 @@ func _on_library_name_text_submitted(tab_title : String):
 
 func _on_tab_bar_tab_selected(idx):
 	_current_tab = tabbar.get_tab_title(idx)
-	tab_selected.emit(_current_tab)
+	tab_selected.emit()
 
 
 func _on_props_palette_item_clicked(index, at_position, mouse_button_index):
@@ -194,7 +206,7 @@ func get_preview_texture(child : Node3D, resolution: int) -> ImageTexture:
 	_viewport.size = Vector2i(resolution, resolution)
 
 	_viewport.add_child(child)
-	var _child = _viewport.get_child(1) #as Node3D
+	var _child = _viewport.get_child(2)
 	# Rotate 45 degrees
 	_child.rotate_y(TAU/8.0)
 
@@ -209,6 +221,7 @@ func get_preview_texture(child : Node3D, resolution: int) -> ImageTexture:
 	var tex = ImageTexture.create_from_image(img)
 
 	_viewport.remove_child(child)
+	child.queue_free()
 	camera.position = cam_pos
 
 	return tex
