@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="PropPainterSettings" load_steps=2 format=3 uid="uid://dwrheermpxegb"]
+[gd_resource type="Resource" script_class="PropPainterSettings" load_steps=2 format=3 uid="uid://bfkppdx3ku4sc"]
 
 [ext_resource type="Script" path="res://addons/prop_painter/scripts/prop_painter_settings.gd" id="1_d1yig"]
 

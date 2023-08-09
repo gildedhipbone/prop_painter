@@ -32,17 +32,20 @@ const RAY_LENGTH = 1000.0
 
 
 func _enter_tree():
+	_brush_material = preload("../materials/brush_material.tres")
+
+	var base_path = get_script().resource_path.get_base_dir()
+	base_path = base_path.left(-7)
+
 	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
 	# Create a settings resource file if one doesn't exist.
-	if (!ResourceLoader.exists("res://addons/prop_painter/resources/settings.tres")):
+	if (!ResourceLoader.exists(base_path + "resources/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
-		ResourceSaver.save(pp_settings, "res://addons/prop_painter/resources/settings.tres")
+		ResourceSaver.save(pp_settings, base_path + "resources/settings.tres")
 
 	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
-
-	_brush_material = preload("../materials/brush_material.tres")
 
 	_editor = get_editor_interface()
 	_preview = _editor.get_resource_previewer()
