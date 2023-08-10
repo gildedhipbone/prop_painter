@@ -22,11 +22,12 @@ var _last_placed_prop : Node
 var _current_tab_title : String
 var _scene_info : Dictionary
 var _parent : Node3D
+var _base_path : String
 
 @onready var _tabbar : TabBar = _prop_painter_dock.tabbar
 @onready var _palette : ItemList = _prop_painter_dock.palette_item_list
 @onready var _parent_field : Button = _prop_painter_dock.parent
-@onready var _prop_painter_settings = load("res://addons/prop_painter/resources/settings.tres") as PropPainterSettings
+@onready var _prop_painter_settings = load(_base_path + "resources/settings.tres") as PropPainterSettings
 
 const RAY_LENGTH = 1000.0
 
@@ -34,15 +35,15 @@ const RAY_LENGTH = 1000.0
 func _enter_tree():
 	_brush_material = preload("../materials/brush_material.tres")
 
-	var base_path = get_script().resource_path.get_base_dir()
-	base_path = base_path.left(-7)
+	_base_path = get_script().resource_path.get_base_dir()
+	_base_path = _base_path.left(-7)
 
 	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
 	# Create a settings resource file if one doesn't exist.
-	if (!ResourceLoader.exists(base_path + "resources/settings.tres")):
+	if (!ResourceLoader.exists(_base_path + "resources/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
-		ResourceSaver.save(pp_settings, base_path + "resources/settings.tres")
+		ResourceSaver.save(pp_settings, _base_path + "resources/settings.tres")
 
 	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
@@ -455,9 +456,9 @@ func _set_parent(new_parent : Node3D):
 
 
 func _switched_scene(new_scene : Node):
-	_brush = _create_sphere(_prop_painter_settings.brush_size)
-
 	if _scene_info.has(new_scene) and new_scene is Node3D:
+		_scene_root.remove_child(_brush)
+		_brush = _create_sphere(_prop_painter_settings.brush_size)
 		_scene_root = new_scene
 		_scene_root.add_child(_brush)
 		_parent = _scene_info.get(new_scene)
@@ -469,8 +470,6 @@ func _switched_scene(new_scene : Node):
 
 
 func _scene_closed(filepath : String):
-	# Signal fires before the scene is closed, hence the timer.
-	await get_tree().create_timer(.1).timeout
 	# Not pretty. But for some reason is_instance_valid() returns true on closed scenes.
 	for scene in _scene_info:
 		if str(scene) == "<Freed Object>":
