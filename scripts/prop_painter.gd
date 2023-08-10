@@ -37,14 +37,14 @@ func _enter_tree():
 
 	_brush_material = load(_base_path + "materials/brush_material.tres")
 
-	add_custom_type("PropPainterSettings", "Resource", load(_base_path + "/scripts/prop_painter_settings.gd"), null)
+	add_custom_type("PropPainterSettings", "Resource", load(_base_path + "scripts/prop_painter_settings.gd"), null)
 	# Create a settings resource file if one doesn't exist.
-	if (!ResourceLoader.exists(_base_path + "/settings.tres")):
+	if (!ResourceLoader.exists(_base_path + "settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
-		ResourceSaver.save(pp_settings, _base_path + "/settings.tres")
+		ResourceSaver.save(pp_settings, _base_path + "settings.tres")
 
-	_prop_painter_settings = load(_base_path + "/settings.tres")
+	_prop_painter_settings = load(_base_path + "settings.tres")
 
 	_prop_painter_dock = load(_base_path + "scenes/prop_painter.tscn").instantiate()
 	var script : Script = load(_base_path + "scripts/gui_handler.gd")
@@ -273,10 +273,11 @@ func _distance_ok(position : Vector3) -> bool:
 func _align_with_y(transf : Transform3D, normal : Vector3):
 	var scale = transf.basis.get_scale()
 
+	normal = normal.normalized()
+
 	transf.basis.x = normal.cross(transf.basis.z)
 	transf.basis.y = normal
 	transf.basis.z = transf.basis.x.cross(normal)
-
 	transf.basis = transf.basis.orthonormalized()
 
 	transf.basis.x *= scale.x

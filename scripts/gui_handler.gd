@@ -235,7 +235,10 @@ func get_preview_texture(child : Node3D, resolution: int) -> ImageTexture:
 # Move to util.gd
 func _get_aabb(visual_instance : Node3D) -> AABB:
 	# To-do: In case of multiple meshes, merge them and get the combined AABB.
-	var meshes = visual_instance.find_children("*", "MeshInstance3D", true, false)
-	var aabb : AABB = meshes[0].mesh.get_aabb()
-
+	var aabb : AABB
+	if visual_instance is MeshInstance3D:
+		aabb = visual_instance.mesh.get_aabb()
+	else:
+		var meshes = visual_instance.find_children("*", "MeshInstance3D", true, false)
+		aabb = meshes[0].mesh.get_aabb()
 	return aabb
