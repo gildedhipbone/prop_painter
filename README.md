@@ -1,6 +1,8 @@
 # Prop Painter
 Prop Painter is an addon for Godot 4 (developed and tested on Godot 4.1.1) to help you organize and place assets. Prop Painter supports PackedScene files (.tscn, .glb, .blend, .fbx, .dae). Support for .res files is unreliable.
 
+Open the settings.tres file at least once, or settings won't be saved.
+
 ## How It Works
 Add tabs to create libraries into which you drag and drop your assets from the FileSystem. Prop Painter will then generate previews. 
 ![pp_drag_n_drop](https://github.com/gildedhipbone/prop_painter/assets/36510916/94735f11-0575-42ab-9082-dcf1d6808e97)
