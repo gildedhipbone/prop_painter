@@ -39,12 +39,12 @@ func _enter_tree():
 
 	add_custom_type("PropPainterSettings", "Resource", load(_base_path + "/scripts/prop_painter_settings.gd"), null)
 	# Create a settings resource file if one doesn't exist.
-	if (!ResourceLoader.exists(_base_path + "resources/settings.tres")):
+	if (!ResourceLoader.exists(_base_path + "/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
-		ResourceSaver.save(pp_settings, _base_path + "resources/settings.tres")
+		ResourceSaver.save(pp_settings, _base_path + "/settings.tres")
 
-	_prop_painter_settings = load(_base_path + "resources/settings.tres")
+	_prop_painter_settings = load(_base_path + "/settings.tres")
 
 	_prop_painter_dock = load(_base_path + "scenes/prop_painter.tscn").instantiate()
 	var script : Script = load(_base_path + "scripts/gui_handler.gd")
