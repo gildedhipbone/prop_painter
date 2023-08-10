@@ -41,10 +41,16 @@ signal import_confirmed(path : String)
 signal palette_drop_data_added(file_paths : Array, tab: String)
 signal icon_size_submitted(size : int)
 
+
 func _ready():
 	# Had issues with titles not updating in Editor.
 	_import_dialog.title = "Import Asset Library"
 	_export_dialog.title = "Export Asset Library"
+
+	var script = preload("../scripts/prop_palette.gd")
+	palette_item_list.set_script(script)
+	script = preload("../scripts/parent_field.gd")
+	parent.set_script(script)
 
 	palette_item_list.p_drop_data_added.connect(_palette_drop_data)
 	_options_mb.get_popup().index_pressed.connect(_options_pressed)

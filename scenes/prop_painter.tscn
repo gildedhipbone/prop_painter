@@ -1,8 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://wtibgyagin6v"]
-
-[ext_resource type="Script" path="res://addons/prop_painter/scripts/gui_handler.gd" id="1_tcld2"]
-[ext_resource type="Script" path="res://addons/prop_painter/scripts/parent_field.gd" id="2_jsfna"]
-[ext_resource type="Script" path="res://addons/prop_painter/scripts/prop_palette.gd" id="3_y4ijw"]
+[gd_scene load_steps=3 format=3 uid="uid://wtibgyagin6v"]
 
 [sub_resource type="Environment" id="Environment_wo26b"]
 background_mode = 1
@@ -25,7 +21,6 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("1_tcld2")
 
 [node name="VBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -51,7 +46,6 @@ text = "Parent:"
 layout_mode = 2
 text = "...
 "
-script = ExtResource("2_jsfna")
 
 [node name="HSeparator2" type="HSeparator" parent="VBoxContainer/Side Panel"]
 layout_mode = 2
@@ -218,7 +212,6 @@ allow_rmb_select = true
 max_columns = 0
 fixed_column_width = 128
 icon_mode = 0
-script = ExtResource("3_y4ijw")
 
 [node name="PopupMenu" type="PopupMenu" parent="."]
 
@@ -234,7 +227,7 @@ offset_bottom = 46.0
 placeholder_text = "New name"
 
 [node name="ImportDialog" type="FileDialog" parent="."]
-title = "Import Asset Library"
+title = "Open a File"
 initial_position = 4
 size = Vector2i(512, 557)
 ok_button_text = "Open"

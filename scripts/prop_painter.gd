@@ -23,30 +23,37 @@ var _current_tab_title : String
 var _scene_info : Dictionary
 var _parent : Node3D
 var _base_path : String
-
-@onready var _tabbar : TabBar = _prop_painter_dock.tabbar
-@onready var _palette : ItemList = _prop_painter_dock.palette_item_list
-@onready var _parent_field : Button = _prop_painter_dock.parent
-@onready var _prop_painter_settings = load(_base_path + "resources/settings.tres") as PropPainterSettings
+var _tabbar : TabBar
+var _palette : ItemList
+var _parent_field : Button
+var _prop_painter_settings : PropPainterSettings
 
 const RAY_LENGTH = 1000.0
 
 
 func _enter_tree():
-	_brush_material = preload("../materials/brush_material.tres")
-
 	_base_path = get_script().resource_path.get_base_dir()
 	_base_path = _base_path.left(-7)
 
-	add_custom_type("PropPainterSettings", "Resource", preload("../scripts/prop_painter_settings.gd"), null)
+	_brush_material = load(_base_path + "materials/brush_material.tres")
+
+	add_custom_type("PropPainterSettings", "Resource", load(_base_path + "/scripts/prop_painter_settings.gd"), null)
 	# Create a settings resource file if one doesn't exist.
 	if (!ResourceLoader.exists(_base_path + "resources/settings.tres")):
 		var pp_settings = PropPainterSettings.new()
 		pp_settings.libraries["All"] = []
 		ResourceSaver.save(pp_settings, _base_path + "resources/settings.tres")
 
-	_prop_painter_dock = preload("../scenes/prop_painter.tscn").instantiate()
+	_prop_painter_settings = load(_base_path + "resources/settings.tres")
+
+	_prop_painter_dock = load(_base_path + "scenes/prop_painter.tscn").instantiate()
+	var script : Script = load(_base_path + "scripts/gui_handler.gd")
+	_prop_painter_dock.set_script(script)
 	add_control_to_bottom_panel(_prop_painter_dock, "Prop Painter")
+
+	_tabbar = _prop_painter_dock.tabbar
+	_palette = _prop_painter_dock.palette_item_list
+	_parent_field = _prop_painter_dock.parent
 
 	_editor = get_editor_interface()
 	_preview = _editor.get_resource_previewer()
