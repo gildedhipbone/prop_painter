@@ -1,4 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://wtibgyagin6v"]
+[gd_scene load_steps=5 format=3 uid="uid://wtibgyagin6v"]
+
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/parent_field.gd" id="1_ki8yc"]
+[ext_resource type="Script" path="res://addons/prop_painter/scripts/prop_palette.gd" id="2_x75i3"]
 
 [sub_resource type="Environment" id="Environment_wo26b"]
 background_mode = 1
@@ -46,6 +49,7 @@ text = "Parent:"
 layout_mode = 2
 text = "...
 "
+script = ExtResource("1_ki8yc")
 
 [node name="HSeparator2" type="HSeparator" parent="VBoxContainer/Side Panel"]
 layout_mode = 2
@@ -141,6 +145,27 @@ text = "Align to surface"
 [node name="Alignment Toggle" type="CheckButton" parent="VBoxContainer/Side Panel/Alignment Settings"]
 layout_mode = 2
 
+[node name="Snapping Settings" type="HBoxContainer" parent="VBoxContainer/Side Panel"]
+layout_mode = 2
+
+[node name="Snapping Label" type="Label" parent="VBoxContainer/Side Panel/Snapping Settings"]
+layout_mode = 2
+text = "Snapping"
+
+[node name="Snapping Toggle" type="CheckButton" parent="VBoxContainer/Side Panel/Snapping Settings"]
+layout_mode = 2
+
+[node name="Step Label" type="Label" parent="VBoxContainer/Side Panel/Snapping Settings"]
+layout_mode = 2
+text = "Step"
+
+[node name="Step" type="SpinBox" parent="VBoxContainer/Side Panel/Snapping Settings"]
+layout_mode = 2
+step = 0.1
+value = 1.0
+allow_greater = true
+suffix = "u"
+
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/Side Panel"]
 layout_mode = 2
 
@@ -212,6 +237,7 @@ allow_rmb_select = true
 max_columns = 0
 fixed_column_width = 128
 icon_mode = 0
+script = ExtResource("2_x75i3")
 
 [node name="PopupMenu" type="PopupMenu" parent="."]
 
@@ -227,7 +253,7 @@ offset_bottom = 46.0
 placeholder_text = "New name"
 
 [node name="ImportDialog" type="FileDialog" parent="."]
-title = "Open a File"
+title = "Import Asset Library"
 initial_position = 4
 size = Vector2i(512, 557)
 ok_button_text = "Open"
@@ -262,6 +288,8 @@ transform = Transform3D(0.866025, 0.353553, -0.353553, 0, 0.707107, 0.707107, 0.
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Transform Settings/Scale" to="." method="_on_scale_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/Side Panel/Brush Settings/Margin" to="." method="_on_margin_value_changed"]
 [connection signal="toggled" from="VBoxContainer/Side Panel/Alignment Settings/Alignment Toggle" to="." method="_on_alignment_toggle_toggled"]
+[connection signal="toggled" from="VBoxContainer/Side Panel/Snapping Settings/Snapping Toggle" to="." method="_on_snapping_toggle_toggled"]
+[connection signal="value_changed" from="VBoxContainer/Side Panel/Snapping Settings/Step" to="." method="_on_snapping_step_value_changed"]
 [connection signal="text_submitted" from="VBoxContainer/Palette Panel/Palette Top Bar/PanelContainer/HBoxContainer/Add tab" to="." method="_on_library_name_text_submitted"]
 [connection signal="tab_rmb_clicked" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_rmb_clicked"]
 [connection signal="tab_selected" from="VBoxContainer/Palette Panel/Palette Top Bar/TabBar" to="." method="_on_tab_bar_tab_selected"]

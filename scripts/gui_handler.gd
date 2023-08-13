@@ -29,6 +29,8 @@ signal scale_mult_changed(value : float)
 signal base_scale_changed(value : float)
 signal margin_value_changed(value : float)
 signal alignment_toggled(value : bool)
+signal snapping_toggled(value : bool)
+signal snapping_step_value_changed(value: float)
 signal tab_selected()
 signal palette_remove_selected(selected_items : Array)
 signal add_tab(library : String)
@@ -98,6 +100,9 @@ func set_margin_value(value : float):
 func _on_margin_value_changed(value):
 	margin_value_changed.emit(value)
 
+func _on_snapping_step_value_changed(value):
+	snapping_step_value_changed.emit(value)
+
 func set_icon_size(value: int):
 	_icon_size_spinbox.value = value
 func _on_icon_size_submitted(value : String):
@@ -112,6 +117,8 @@ func _on_icon_size_submitted(value : String):
 func _on_alignment_toggle_toggled(button_pressed):
 	alignment_toggled.emit(button_pressed)
 
+func _on_snapping_toggle_toggled(button_pressed):
+	snapping_toggled.emit(button_pressed)
 
 func _on_library_name_text_submitted(tab_title : String):
 	_tab_name_lineedit.clear()
