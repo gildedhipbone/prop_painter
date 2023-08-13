@@ -13,6 +13,8 @@ var _current_camera : Camera3D = null
 var _brush : MeshInstance3D
 var _brush_material : ShaderMaterial
 var _align_to_surface_normal : bool = false
+var _snap : bool = false
+var _snapping_step: float = 1.0
 var _mouse_position : Vector2
 var _current_action := ACTION_NONE
 var _current_selection : Array
@@ -74,6 +76,8 @@ func _ready():
 	_prop_painter_dock.base_scale_changed.connect(_set_base_scale)
 	_prop_painter_dock.margin_value_changed.connect(_set_margin)
 	_prop_painter_dock.alignment_toggled.connect(_set_alignment)
+	_prop_painter_dock.snapping_toggled.connect(_set_snapping)
+	_prop_painter_dock.snapping_step_value_changed.connect(_set_snapping_step)
 	_prop_painter_dock.icon_size_submitted.connect(_set_icon_size)
 	_prop_painter_dock.tab_selected.connect(_update_selected_tab)
 	_prop_painter_dock.palette_remove_selected.connect(_remove_prop)
@@ -186,6 +190,9 @@ func _paint(origin, end):
 
 	if result.is_empty():
 		return
+
+	if _snap:
+		result.position = result.position.snapped(Vector3(_snapping_step, 0.0, _snapping_step))
 
 	_brush.position = result.position
 
@@ -440,6 +447,12 @@ func _set_margin(value : float):
 
 func _set_alignment(toggled : bool):
 	_align_to_surface_normal = toggled
+
+func _set_snapping(toggled: bool):
+	_snap = toggled
+
+func _set_snapping_step(value: float):
+	_snapping_step = value
 
 func _set_icon_size(size : int):
 	if _prop_painter_settings.icon_size != size:
